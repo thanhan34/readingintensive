@@ -20,9 +20,7 @@ export default function ExcelUploader({ onQuestionsLoaded }: Props) {
 
   const handleFileUpload = async (file: File) => {
     try {
-      /* eslint-disable @typescript-eslint/no-unused-vars */
       Papa.parse<CSVRow>(file, {
-      /* eslint-enable @typescript-eslint/no-unused-vars */
         header: true,
         complete: (results) => {
           console.log("CSV Headers:", results.meta.fields);
@@ -88,7 +86,7 @@ export default function ExcelUploader({ onQuestionsLoaded }: Props) {
           }
         },
         error: (error: Error, file: File) => {
-          console.error("Error parsing CSV file:", error);
+          console.error("Error parsing CSV file:", error, "File:", file.name);
           setError("Failed to parse CSV file. Please check the format and try again.");
         }
       });
