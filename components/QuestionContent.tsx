@@ -96,7 +96,8 @@ export default function QuestionContent({ question }: Props) {
     setEditedQuestion(question);
   }
 
-  const words = question.content.split(/\s+/);
+  // Split content into parts, preserving (Answer: ...) sections
+  const parts = question.content.split(/(\(Answer:[^)]+\))/g);
 
   return (
     <div className="h-full">
@@ -115,18 +116,33 @@ export default function QuestionContent({ question }: Props) {
             </div>
             <div className="prose max-w-none">
               <p className="text-base leading-relaxed">
-              {words.map((word, index) => (
-                <span key={index} className="inline-block">
-                  <button
-                    onClick={() => handleWordClick(word)}
-                    className="px-1 py-0.5 rounded hover:bg-yellow-100 transition-colors"
-                  >
-                    {word}
-                  </button>{" "}
-                </span>
-              ))}
-            </p>
-          </div>
+                {parts.map((part, index) => {
+                  if (part.match(/\(Answer:[^)]+\)/)) {
+                    // This is an answer section
+                    return (
+                      <span key={index} data-answer="true">
+                        {part}
+                      </span>
+                    );
+                  } else {
+                    // Split non-answer text into words for translation
+                    return part.split(/\s+/).map((word, wordIndex) => (
+                      word && (
+                        <span key={`${index}-${wordIndex}`} className="inline-block">
+                          <button
+                            onClick={() => handleWordClick(word)}
+                            data-translate="true"
+                            className="px-1 py-0.5 rounded"
+                          >
+                            {word}
+                          </button>{" "}
+                        </span>
+                      )
+                    ));
+                  }
+                })}
+              </p>
+            </div>
           </div>
         </div>
         

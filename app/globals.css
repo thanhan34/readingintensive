@@ -73,3 +73,22 @@ body {
 .word-highlight:hover {
   @apply bg-yellow-200;
 }
+
+/* Answer text highlight */
+[data-answer="true"] {
+  background-color: #fc5d01;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Hover effect for translatable text */
+button[data-translate="true"] {
+  transition: all 0.2s ease;
+}
+
+button[data-translate="true"]:hover {
+  background-color: #fc5d01;
+  color: white;
+  cursor: pointer;
+}
