@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to all questions
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Allow read/write access to word definitions cache
+    match /dictionary/{word} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
