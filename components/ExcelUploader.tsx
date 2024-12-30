@@ -20,7 +20,9 @@ export default function ExcelUploader({ onQuestionsLoaded }: Props) {
 
   const handleFileUpload = async (file: File) => {
     try {
+      /* eslint-disable @typescript-eslint/no-unused-vars */
       Papa.parse<CSVRow>(file, {
+      /* eslint-enable @typescript-eslint/no-unused-vars */
         header: true,
         complete: (results) => {
           console.log("CSV Headers:", results.meta.fields);

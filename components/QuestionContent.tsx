@@ -252,8 +252,10 @@ export default function QuestionContent({ question }: Props) {
                 <button
                   onClick={async () => {
                     try {
+                      /* eslint-disable @typescript-eslint/no-unused-vars */
                       const docRef = doc(db, "questions", editedQuestion.id);
                       const { id, ...updateData } = editedQuestion;
+                      /* eslint-enable @typescript-eslint/no-unused-vars */
                       await updateDoc(docRef, updateData);
                       setIsEditing(false);
                       // Update the current question with the edited data

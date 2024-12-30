@@ -337,8 +337,10 @@ export default function QuestionReviewTable({ questions, onSubmitComplete }: Pro
                 <button
                   onClick={async () => {
                     try {
+                      /* eslint-disable @typescript-eslint/no-unused-vars */
                       const docRef = doc(db, "questions", editingQuestion.id);
                       const { id, ...updateData } = editingQuestion;
+                      /* eslint-enable @typescript-eslint/no-unused-vars */
                       await updateDoc(docRef, updateData);
                       setEditingQuestion(null);
                       onSubmitComplete(); // Refresh the questions list
