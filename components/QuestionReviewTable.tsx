@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
 import { Question } from "../src/types";
@@ -18,7 +18,16 @@ export default function QuestionReviewTable({ questions, onSubmitComplete }: Pro
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const questionsPerPage = 10;
+
+  // Filter questions based on search term
+  const filteredQuestions = questions.filter(q => 
+    q.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    q.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    q.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    q.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const validateQuestions = () => {
     const errors: { [key: number]: string[] } = {};
@@ -83,35 +92,49 @@ export default function QuestionReviewTable({ questions, onSubmitComplete }: Pro
   };
 
   // Calculate pagination
-  const totalPages = Math.ceil(questions.length / questionsPerPage);
+  const totalPages = Math.ceil(filteredQuestions.length / questionsPerPage);
   const startIndex = (currentPage - 1) * questionsPerPage;
   const endIndex = startIndex + questionsPerPage;
-  const currentQuestions = questions.slice(startIndex, endIndex);
+  const currentQuestions = filteredQuestions.slice(startIndex, endIndex);
 
   return (
     <div className="mt-6 flex flex-col">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-gray-700">
-          Showing {startIndex + 1} to {Math.min(endIndex, questions.length)} of {questions.length} questions
+      <div className="mb-4 space-y-4">
+        <div className="flex items-center">
+          <input
+            type="text"
+            placeholder="Search questions..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded-md disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded-md disabled:opacity-50"
-          >
-            Next
-          </button>
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredQuestions.length)} of {filteredQuestions.length} questions
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded-md disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded-md disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 
@@ -180,12 +203,30 @@ export default function QuestionReviewTable({ questions, onSubmitComplete }: Pro
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button
-                    onClick={() => setEditingQuestion(question)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Edit
-                  </button>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => setEditingQuestion(question)}
+                      className="text-indigo-600 hover:text-indigo-900"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (window.confirm('Are you sure you want to delete this question?')) {
+                          try {
+                            await deleteDoc(doc(db, "questions", question.id));
+                            onSubmitComplete(); // Refresh the questions list
+                          } catch (error) {
+                            console.error("Error deleting question:", error);
+                            setError("Failed to delete question");
+                          }
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

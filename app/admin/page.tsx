@@ -5,6 +5,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import ExcelUploader from "../../components/ExcelUploader";
 import QuestionReviewTable from "../../components/QuestionReviewTable";
+import QuestionForm from "../../components/QuestionForm";
 
 import { Question } from "../../src/types";
 
@@ -63,6 +64,18 @@ export default function AdminPage() {
       </div>
       
       <div className="flex-1 overflow-auto p-4">
+        <div className="bg-white rounded-lg shadow mb-4">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Add Individual Question</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Add a single question using the form below.
+            </p>
+          </div>
+          <div className="p-6">
+            <QuestionForm onQuestionAdded={handleSubmitComplete} />
+          </div>
+        </div>
+        
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-900">Upload Questions</h2>
