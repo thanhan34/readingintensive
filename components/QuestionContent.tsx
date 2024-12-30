@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -64,7 +65,7 @@ export default function QuestionContent({ question }: Props) {
 
         const definition: WordDefinition = {
           vietnamese: translation.text || "No translation available",
-          images: (images.urls || []).map((item: any) => item.url),
+          images: (images.urls || []).map((item: { url: string }) => item.url),
           partOfSpeech,
           ipa
         };
@@ -339,12 +340,14 @@ export default function QuestionContent({ question }: Props) {
                     <h3 className="font-medium text-gray-700 mb-2">Related Images:</h3>
                     <div className="grid grid-cols-2 gap-2">
                       {wordDefinition.images.slice(0, 4).map((url, index) => (
-                        <img
-                          key={index}
-                          src={url}
-                          alt={`${selectedWord} visualization ${index + 1}`}
-                          className="rounded-lg w-full h-48 object-cover"
-                        />
+                        <div key={index} className="relative w-full h-48">
+                          <Image
+                            src={url}
+                            alt={`${selectedWord} visualization ${index + 1}`}
+                            fill
+                            className="rounded-lg object-cover"
+                          />
+                        </div>
                       ))}
                     </div>
                   </div>

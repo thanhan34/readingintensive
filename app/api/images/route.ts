@@ -4,7 +4,7 @@ import nodeFetch from "node-fetch";
 
 const unsplash = createApi({
   accessKey: process.env.UNSPLASH_ACCESS_KEY!,
-  fetch: nodeFetch as any,
+  fetch: nodeFetch as typeof fetch,
 });
 
 export async function GET(request: Request) {
