@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { Question } from "../src/types";
+// import { Question } from "../src/types";
 
 interface QuestionFormProps {
   onQuestionAdded: () => void;
