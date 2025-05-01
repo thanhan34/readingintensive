@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -24,6 +24,29 @@ export default function QuestionContent({ question }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuestion, setEditedQuestion] = useState<Question | null>(null);
+  
+  // Handle navigation on the client side only
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  const handleNextClick = () => {
+    if (question) {
+      const event = new CustomEvent('navigate-next', { 
+        detail: { questionId: question.id, questionType: question.type } 
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
+  // Initialize editedQuestion when question changes
+  useEffect(() => {
+    if (question && (!editedQuestion || editedQuestion.id !== question.id)) {
+      setEditedQuestion(question);
+    }
+  }, [question, editedQuestion]);
 
   const handleWordClick = async (word: string) => {
     setSelectedWord(word);
@@ -93,68 +116,77 @@ export default function QuestionContent({ question }: Props) {
     );
   }
 
-  if (!editedQuestion && question) {
-    setEditedQuestion(question);
-  }
-
   // Split content into parts, preserving (Answer: ...) sections
   const parts = question.content.split(/(\(Answer:[^)]+\))/g);
 
   return (
     <div className="h-full">
-      <div className="h-full grid grid-cols-1 lg:grid-cols-2">
-        {/* Left Column: Title, Content, and Edit Button */}
-        <div className="h-full overflow-y-auto p-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex justify-between items-center mb-3">
-              <h1 className="text-xl font-bold text-gray-900">{question.title}</h1>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-3 py-1 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Edit
-              </button>
-            </div>
-            <div className="prose max-w-none">
-              <p className="text-base leading-relaxed">
-                {parts.map((part, index) => {
-                  if (part.match(/\(Answer:[^)]+\)/)) {
-                    // This is an answer section
-                    return (
-                      <span key={index} data-answer="true">
-                        {part}
-                      </span>
-                    );
-                  } else {
-                    // Split non-answer text into words for translation
-                    return part.split(/\s+/).map((word, wordIndex) => (
-                      word && (
-                        <span key={`${index}-${wordIndex}`} className="inline-block">
-                          <button
-                            onClick={() => handleWordClick(word)}
-                            data-translate="true"
-                            className="px-1 py-0.5 rounded"
-                          >
-                            {word}
-                          </button>{" "}
-                        </span>
-                      )
-                    ));
-                  }
-                })}
-              </p>
-            </div>
-          </div>
+      <div className="h-full flex flex-col">
+        {/* Top Navigation for Next Button */}
+        <div className="p-4 flex justify-end">
+          <button
+            onClick={isClient ? handleNextClick : undefined}
+            className="px-3 py-1 text-sm font-medium text-white bg-[#fc5d01] rounded-md hover:bg-[#fd7f33] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fc5d01]"
+          >
+            Next →
+          </button>
         </div>
         
-        {/* Right Column: Explanations */}
-        <div className="h-full overflow-y-auto border-l p-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Explanations:</h2>
-            <div className="space-y-2">
-              {question.text.split('\n').map((line, index) => (
-                <p key={index} className="text-gray-700 text-base">{line}</p>
-              ))}
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          {/* Title and Edit Button */}
+          <div className="p-4 flex justify-between items-center bg-white border-b">
+            <h1 className="text-xl font-bold text-gray-900">{question.title}</h1>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1 text-sm font-medium text-white bg-[#fc5d01] rounded-md hover:bg-[#fd7f33] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fc5d01]"
+            >
+              Edit
+            </button>
+          </div>
+          
+          {/* Text Content - Full Screen */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 p-8 bg-white border-b">
+              <div className="w-full border border-red-500 p-4 rounded">
+                <p className="text-xl leading-relaxed w-full">
+                  {parts.map((part, index) => {
+                    if (part.match(/\(Answer:[^)]+\)/)) {
+                      // This is an answer section
+                      return (
+                        <span key={index} data-answer="true" className="text-[#fc5d01] font-medium">
+                          {part}
+                        </span>
+                      );
+                    } else {
+                      // Split non-answer text into words for translation
+                      return part.split(/\s+/).map((word, wordIndex) => (
+                        word && (
+                          <span key={`${index}-${wordIndex}`} className="inline-block">
+                            <button
+                              onClick={() => handleWordClick(word)}
+                              data-translate="true"
+                              className="px-1 py-0.5 rounded hover:bg-[#fedac2]"
+                            >
+                              {word}
+                            </button>{" "}
+                          </span>
+                        )
+                      ));
+                    }
+                  })}
+                </p>
+              </div>
+            </div>
+            
+            {/* Explanations */}
+            <div className="p-8 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Explanations:</h2>
+              <div className="space-y-4">
+                {question.text.split('\n').map((line, index) => (
+                  <p key={index} className="text-gray-700">{line}</p>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -197,7 +229,7 @@ export default function QuestionContent({ question }: Props) {
                     ...editedQuestion,
                     title: e.target.value
                   })}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm mb-3"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#fc5d01] focus:ring-[#fc5d01] sm:text-sm mb-3"
                 />
 
                 <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
@@ -208,7 +240,7 @@ export default function QuestionContent({ question }: Props) {
                     content: e.target.value
                   })}
                   rows={24}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#fc5d01] focus:ring-[#fc5d01] sm:text-sm"
                 />
               </div>
 
@@ -216,19 +248,33 @@ export default function QuestionContent({ question }: Props) {
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-sm font-medium text-gray-700">Text</label>
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700">Type:</label>
-                    <select
-                      value={editedQuestion.type}
-                      onChange={(e) => setEditedQuestion({
-                        ...editedQuestion,
-                        type: e.target.value as "RWFIB" | "RFIB"
-                      })}
-                      className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value="RWFIB">RWFIB</option>
-                      <option value="RFIB">RFIB</option>
-                    </select>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <label className="text-sm font-medium text-gray-700">Priority:</label>
+                      <input
+                        type="checkbox"
+                        checked={editedQuestion.priority || false}
+                        onChange={(e) => setEditedQuestion({
+                          ...editedQuestion,
+                          priority: e.target.checked
+                        })}
+                        className="h-4 w-4 text-[#fc5d01] rounded focus:ring-[#fc5d01]"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <label className="text-sm font-medium text-gray-700">Type:</label>
+                      <select
+                        value={editedQuestion.type}
+                        onChange={(e) => setEditedQuestion({
+                          ...editedQuestion,
+                          type: e.target.value as "RWFIB" | "RFIB"
+                        })}
+                        className="rounded-md border-gray-300 shadow-sm focus:border-[#fc5d01] focus:ring-[#fc5d01] sm:text-sm"
+                      >
+                        <option value="RWFIB">RWFIB</option>
+                        <option value="RFIB">RFIB</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <textarea
@@ -238,7 +284,7 @@ export default function QuestionContent({ question }: Props) {
                     text: e.target.value
                   })}
                   rows={24}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#fc5d01] focus:ring-[#fc5d01] sm:text-sm"
                 />
               </div>
 
@@ -261,13 +307,14 @@ export default function QuestionContent({ question }: Props) {
                         question.content = editedQuestion.content;
                         question.text = editedQuestion.text;
                         question.type = editedQuestion.type;
+                        question.priority = editedQuestion.priority;
                       }
                     } catch (error) {
                       console.error("Error updating question:", error);
                       alert("Failed to update question");
                     }
                   }}
-                  className="px-2 py-0.5 border border-transparent rounded text-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="px-2 py-0.5 border border-transparent rounded text-sm text-white bg-[#fc5d01] hover:bg-[#fd7f33]"
                 >
                   Save Changes
                 </button>

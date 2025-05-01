@@ -4,4 +4,5 @@ export interface Question {
   type: "RWFIB" | "RFIB";
   content: string;
   text: string;
+  priority?: boolean;
 }
